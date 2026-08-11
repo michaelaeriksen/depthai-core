@@ -33,6 +33,8 @@ endif()
 
 find_package(yaml-cpp REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+# libnop exports its target without a namespace, so the imported name is plain `libnop`.
+find_package(libnop CONFIG REQUIRED)
 find_package(semver CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(XLink CONFIG REQUIRED)
@@ -381,7 +383,11 @@ target_include_directories(${TARGET_CORE_NAME} SYSTEM
 target_link_libraries(${TARGET_CORE_NAME}
     PUBLIC
         nlohmann_json::nlohmann_json
-        #libnop
+        # libnop is PUBLIC because depthai/utility/Serialization.hpp includes nop/ headers, so
+        # every consumer compiles against them. Declaring it is not cosmetic: without the
+        # usage requirement it resolves only where a package manager happens to put every
+        # package's headers on one include path, and fails anywhere else.
+        libnop
     INTERFACE
         XLinkPublic
     PRIVATE
