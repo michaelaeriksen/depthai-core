@@ -17,48 +17,28 @@ set(DEPTHAI_BOOTLOADER_SHARED_INCLUDE
     ${DEPTHAI_BOOTLOADER_SHARED_FOLDER}/src
 )
 
-# Try retriving depthai-bootloader-shared commit hash
-find_package(Git)
-if(GIT_FOUND AND NOT DEPTHAI_DOWNLOADED_SOURCES)
-
-    if(NOT DEPTHAI_BOOTLOADER_SHARED_LOCAL)
-        # Check that submodule is initialized and updated
-        execute_process(
-            COMMAND ${GIT_EXECUTABLE} submodule status ${DEPTHAI_BOOTLOADER_SHARED_FOLDER}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-            OUTPUT_VARIABLE statusCommit
-            ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        # Check if statusCommit has a valid value
-        if(NOT statusCommit STREQUAL "")
-            string(SUBSTRING ${statusCommit} 0 1 status)
-            if("${status}" STREQUAL "-")
-                message(FATAL_ERROR "Submodule 'depthai-bootloader-shared' not initialized/updated. Run 'git submodule update --init --recursive' first")
-            endif()
-        else()
-            message(WARNING "No status available for submodule 'depthai-bootloader-shared'. This might indicate a problem with the submodule path or git command.")
-        endif()
-    endif()
-
-    # Get depthai-bootloader-shared current commit
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
-        WORKING_DIRECTORY ${DEPTHAI_BOOTLOADER_SHARED_FOLDER}
-        RESULT_VARIABLE DEPTHAI_BOOTLOADER_SHARED_COMMIT_RESULT
-        OUTPUT_VARIABLE DEPTHAI_BOOTLOADER_SHARED_COMMIT_HASH
-        ERROR_QUIET
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    if(${DEPTHAI_BOOTLOADER_SHARED_COMMIT_RESULT} EQUAL 0)
-        set(DEPTHAI_BOOTLOADER_SHARED_COMMIT_FOUND TRUE)
-    else()
-        set(DEPTHAI_BOOTLOADER_SHARED_COMMIT_FOUND FALSE)
-    endif()
+# depthai-bootloader-shared commit hash.
+#
+# Upstream discovers this by running `git submodule status` and then `git rev-parse HEAD`
+# inside the submodule working tree. Neither works here: the sources are vendored as plain
+# files, so there is no submodule to interrogate and `git rev-parse HEAD` in that folder
+# answers with THIS repository's HEAD -- a hash that looks valid and is wrong. It is fed to
+# DepthaiBootloaderDownload() as the value to enforce against, so a wrong-but-plausible hash
+# is worse than no hash: with DEPTHAI_BOOTLOADER_SHARED_COMMIT_HASH_ENFORCE on (which CI sets)
+# it enforces a match against a hash that has nothing to do with the bootloader.
+#
+# The commit is a fact about what was vendored, so it is recorded as one. Update this line in
+# the same commit that updates the files under depthai-bootloader-shared/.
+if(NOT DEPTHAI_BOOTLOADER_SHARED_LOCAL)
+    set(DEPTHAI_BOOTLOADER_SHARED_COMMIT_HASH "b287ecbacd3b0c963b5dfcf95767123b0c143b57")
+    set(DEPTHAI_BOOTLOADER_SHARED_COMMIT_FOUND TRUE)
+else()
+    set(DEPTHAI_BOOTLOADER_SHARED_COMMIT_FOUND FALSE)
 endif()
 
 # Make sure files exist
 foreach(source_file ${DEPTHAI_BOOTLOADER_SHARED_SOURCES})
     if(NOT EXISTS ${source_file})
-        message(FATAL_ERROR "depthai-bootloader-shared submodule files missing. Make sure to download prepackaged release instead of \"Source code\" on GitHub. Example: depthai-core-vX.Y.Z.tar.gz")
+        message(FATAL_ERROR "depthai-bootloader-shared sources missing at ${DEPTHAI_BOOTLOADER_SHARED_FOLDER}. They are vendored in this repository, so this means the checkout or archive is incomplete.")
     endif()
 endforeach()
