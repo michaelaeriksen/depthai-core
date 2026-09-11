@@ -1,6 +1,7 @@
 #include "H26xParsers.hpp"
 
 #include <cmath>
+#include <cstdlib>
 #include <tuple>
 
 #include "depthai/utility/Memory.hpp"

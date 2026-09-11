@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <vector>
 
 // project
 #include "depthai/utility/Memory.hpp"

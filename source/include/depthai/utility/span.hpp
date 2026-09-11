@@ -13,6 +13,7 @@ http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf
 #define DAI_SPAN_HPP_INCLUDED
 
 #include <array>
+#include <exception>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
